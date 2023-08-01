@@ -1,0 +1,26 @@
+# PARAMETERS
+PROMPT = "a professional photograph of an astronaut riding a triceratops"
+OUTDIR = "outputs/txt2img-samples"
+STEPS = 50
+PLMS = False
+DPM = False
+FIXED_CODE = False
+DDIM_ETA = 0.0
+N_ITER = 1
+HEIGHT = 512
+WIDTH = 512
+CHANNELS = 4
+DOWNSAPLE_FACTOR = 8
+N_SAMPLES = 1
+N_ROWS = 0
+SCALE = 9.0
+FROM_FILE = ""
+CONFIG = "configs/stable-diffusion/v2-inference-v.yaml"
+CKPT = "ldm/models/model.ckpt"
+SEED = 42
+PRECISION = "autocast"
+REPEAT = 1
+DEVICE = "cpu"
+TORCHSCRIPT = False
+IPEX = False
+BF16 = False
