@@ -29,28 +29,28 @@ jobs:
       - name: Analysing templates with mypy
         run: |
           for dir in tasks/* ; do
-          echo "Checking directory: $dir"
-          if [ -f "$dir/environment.yml" ]; then
-            echo "Setting up conda environment for $dir"
-            conda env create -f "$dir/environment.yml"
-            source activate $(head -n 1 "$dir/environment.yml" | cut -d' ' -f2)
-            conda install mypy
-          elif [ -f "$dir/requirements.txt" ]; then
-            echo "Setting up venv for $dir"
-            python -m venv "$dir/venv"
-            source "$dir/venv/bin/activate"
-            pip install -r "$dir/requirements.txt"
-            pip install mypy
-          else
-            echo "No environment file found in $dir, skipping environment setup"
-          fi
+            echo "Checking directory: $dir"
+            if [ -f "$dir/environment.yml" ]; then
+              echo "Setting up conda environment for $dir"
+              conda env create -f "$dir/environment.yml"
+              source activate $(head -n 1 "$dir/environment.yml" | cut -d' ' -f2)
+              conda install mypy
+            elif [ -f "$dir/requirements.txt" ]; then
+              echo "Setting up venv for $dir"
+              python -m venv "$dir/venv"
+              source "$dir/venv/bin/activate"
+              pip install -r "$dir/requirements.txt"
+              pip install mypy
+            else
+              echo "No environment file found in $dir, skipping environment setup"
+            fi
 
-          echo "Running mypy in $dir"
-          mypy "$dir"
+            echo "Running mypy in $dir"
+            mypy "$dir"
 
-          if [ -f "$dir/environment.yml" ]; then
-            conda deactivate
-          elif [ -f "$dir/requirements.txt" ]; then
-            deactivate
-          fi
-        done
+            if [ -f "$dir/environment.yml" ]; then
+              conda deactivate
+            elif [ -f "$dir/requirements.txt" ]; then
+              deactivate
+            fi
+          done
