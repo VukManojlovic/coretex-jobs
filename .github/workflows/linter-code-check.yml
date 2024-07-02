@@ -29,5 +29,4 @@ jobs:
       - name: Analysing templates with mypy
         run: |
           for dir in $(find tasks -mindepth 1 -maxdepth 1 -type d); do
-            mypy "$dir" &> /dev/null || echo "Mypy cache created"
             mypy "$dir"
