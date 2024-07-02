@@ -26,14 +26,35 @@ jobs:
       - name: Install dependencies
         run: |
           pip install mypy
+
+      - name: Cache Conda Environment
+        id: cache-conda
+        uses: actions/cache@v3
+        with:
+          path: ~/.conda/envs
+          key: ${{ runner.os }}-conda-${{ hashFiles('**/environment.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-conda-
+
+      - name: Cache pip packages
+        id: cache-pip
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            **/venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Analysing templates with mypy
         run: |
           for dir in tasks/* ; do
             echo "Checking directory: $dir"
             if [ -f "$dir/environment.yml" ]; then
               echo "Setting up conda environment for $dir"
-              conda env create -f "$dir/environment.yml"
-              source activate $(head -n 1 "$dir/environment.yml" | cut -d' ' -f2)
+              conda env create -p "$dir/conda_env" -f "$dir/environment.yml"
+              source activate "$dir/conda_env"
               conda install mypy
             elif [ -f "$dir/requirements.txt" ]; then
               echo "Setting up venv for $dir"
@@ -46,7 +67,16 @@ jobs:
             fi
 
             echo "Running mypy in $dir"
-            mypy "$dir"
+            mypy_output=$(mypy "$dir" 2>&1)
+            echo "$mypy_output"
+
+            if echo "$mypy_output" | grep -q 'error:';
+            then
+              echo "Running install-types in $dir"
+              install-types "$dir"
+              echo "Re-running mypy in $dir"
+              mypy "$dir"
+            fi
 
             if [ -f "$dir/environment.yml" ]; then
               conda deactivate
