@@ -12,7 +12,7 @@ from src.model import getModelName, loadModel, loadTokenizer, uploadModel
 from src.configurations import getQuantizationConfig, getPeftParameters, getTrainingParameters
 
 
-def loadData(dataset: CustomDataset) -> Dataset:
+def loadData(dataset: CustomDataset):
     dataset.download()
     for sample in dataset.samples:
         sample.unzip()
