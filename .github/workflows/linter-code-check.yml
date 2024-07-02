@@ -67,7 +67,7 @@ jobs:
             fi
 
             echo "Running mypy in $dir"
-            mypy "$dir"
+            mypy --config-file "$dir/mypy.ini" "$dir"
 
             if [ -f "$dir/environment.yml" ]; then
               conda deactivate
