@@ -67,16 +67,9 @@ jobs:
             fi
 
             echo "Running mypy in $dir"
-            mypy_output=$(mypy "$dir" 2>&1)
-            echo "$mypy_output"
-
-            if echo "$mypy_output" | grep -q 'error:';
-            then
-              echo "Running install-types in $dir"
-              install-types "$dir"
-              echo "Re-running mypy in $dir"
-              mypy "$dir"
-            fi
+            install-types "$dir"
+            echo "Re-running mypy in $dir"
+            mypy "$dir"
 
             if [ -f "$dir/environment.yml" ]; then
               conda deactivate
