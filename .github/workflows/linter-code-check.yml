@@ -12,6 +12,7 @@ on:
       - main
       - stage
       - develop
+      - testing-linter
 
 jobs:
   build:
