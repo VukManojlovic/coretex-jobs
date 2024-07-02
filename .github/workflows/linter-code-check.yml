@@ -24,12 +24,9 @@ jobs:
           python-version: "3.9"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip pipenv wheel
-          pipenv install --dev
-      - name: Generate mypy cache
+          pip install mypy
+      - name: Analysing templates with mypy
         run: |
-          pipenv run mypy coretex &> /dev/null || echo "Mypy cache created"
-      - name: Analysing the code with mypy
-        run: |
-          yes | pipenv run mypy --install-types
-          pipenv run mypy coretex
+        for dir in $(find tasks -mindepth 1 -maxdepth 1 -type d); do
+          mypy "$dir" &> /dev/null || echo "Mypy cache created"
+          mypy "$dir"
