@@ -67,7 +67,7 @@ jobs:
             fi
 
             echo "Running mypy in $dir"
-            install-types "$dir"
+            mypy "$dir" --install-types
             echo "Re-running mypy in $dir"
             mypy "$dir"
 
