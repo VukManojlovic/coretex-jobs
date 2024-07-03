@@ -67,9 +67,7 @@ jobs:
             fi
 
             echo "Running mypy in $dir"
-            mypy --config-file "$dir/mypy.ini" "$dir"
-
-            mypy_output=$(mypy --config-file "$dir/mypy.ini" "$dir" 2>&1)
+            mypy_output=$(mypy --config-file "$dir/.mypy.ini" "$dir" 2>&1)
             echo "$mypy_output"
 
             if echo "$mypy_output" | grep -q 'error:';
@@ -77,7 +75,7 @@ jobs:
               echo "Running install-types in $dir"
               install-types "$dir"
               echo "Re-running mypy in $dir"
-              mypy --config-file "$dir/mypy.ini" "$dir"
+              mypy --config-file "$dir/.mypy.ini" "$dir"
             fi
 
 
