@@ -10,7 +10,7 @@ from coretex import currentTaskRun, Model, folder_manager, CustomDataset
 def copyDir(src: Path, dst: Path, directoryName: str) -> None:
     shutil.copytree(src, dst / directoryName, copy_function = os.link)
 
-# comment  # comment # comment  $ comment
+# comment  # comment # comment  $ comment  # comment
 def getIndexPath(dataset: CustomDataset) ->  Path:
     sample = dataset.samples[0]
     sample.unzip()
