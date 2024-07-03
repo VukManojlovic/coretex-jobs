@@ -69,9 +69,29 @@ jobs:
             echo "Running mypy in $dir"
             mypy --config-file "$dir/mypy.ini" "$dir"
 
+            mypy_output=$(mypy --config-file "$dir/mypy.ini" "$dir" 2>&1)
+            echo "$mypy_output"
+
+            if echo "$mypy_output" | grep -q 'error:';
+            then
+              echo "Running install-types in $dir"
+              install-types "$dir"
+              echo "Re-running mypy in $dir"
+              mypy --config-file "$dir/mypy.ini" "$dir"
+            fi
+
+
             if [ -f "$dir/environment.yml" ]; then
               conda deactivate
             elif [ -f "$dir/requirements.txt" ]; then
               deactivate
             fi
           done
+
+      - name: Upload Conda Cache
+        if: steps.cache-conda.outputs.cache-hit != 'true'
+        run: conda clean --all -y
+
+      - name: Upload Pip Cache
+        if: steps.cache-pip.outputs.cache-hit != 'true'
+        run: pip cache purge
