@@ -76,17 +76,15 @@ jobs:
             echo "Running mypy in $dir"
             set +e  # Disable exit on error
             mypy_output=$(mypy --config-file "$dir/.mypy.ini" "$dir" 2>&1)
-            mypy_exit_code=$?
             set -e  # Re-enable exit on error
             echo "$mypy_output"
 
-            if [ $mypy_exit_code -ne 0 ]; then
+            if echo "$mypy_output" | grep -q 'error:'; then
               echo "Running install-types in $dir"
               mypy --install-types --non-interactive "$dir"
               echo "Re-running mypy in $dir"
               mypy --config-file "$dir/.mypy.ini" "$dir"
             fi
-
 
             if [ -f "$dir/environment.yml" ]; then
               conda deactivate
