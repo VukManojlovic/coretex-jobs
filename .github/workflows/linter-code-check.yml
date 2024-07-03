@@ -82,7 +82,7 @@ jobs:
 
             if [ $mypy_exit_code -ne 0 ]; then
               echo "Running install-types in $dir"
-              install-types "$dir"
+              mypy --install-types "$dir"
               echo "Re-running mypy in $dir"
               mypy --config-file "$dir/.mypy.ini" "$dir"
             fi
