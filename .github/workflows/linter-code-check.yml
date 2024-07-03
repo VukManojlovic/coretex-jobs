@@ -81,9 +81,9 @@ jobs:
 
             if echo "$mypy_output" | grep -q 'error:'; then
               echo "Running install-types in $dir"
-              mypy --install-types --non-interactive "$dir"
-              echo "Re-running mypy in $dir"
-              mypy --config-file "$dir/.mypy.ini" "$dir"
+              mypy --install-types --non-interactive --config-file "$dir/.mypy.ini" "$dir"
+              # echo "Re-running mypy in $dir"
+              # mypy --config-file "$dir/.mypy.ini" "$dir"
             fi
 
             if [ -f "$dir/environment.yml" ]; then
