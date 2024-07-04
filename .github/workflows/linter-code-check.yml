@@ -23,29 +23,9 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: "3.9"
-      - name: Install dependencies
+      - name: Install mypy globally
         run: |
           pip install mypy
-
-      - name: Cache Conda Environment
-        id: cache-conda
-        uses: actions/cache@v3
-        with:
-          path: ~/.conda/envs
-          key: ${{ runner.os }}-conda-${{ hashFiles('**/environment.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-conda-
-
-      - name: Cache pip packages
-        id: cache-pip
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/pip
-            **/venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
 
       - name: Analysing templates with mypy
         run: |
@@ -58,21 +38,57 @@ jobs:
               continue
             fi
 
+            # Determine the type of environment and generate a unique cache key
             if [ -f "$dir/environment.yml" ]; then
-              echo "Setting up conda environment for $dir"
-              conda env create -n $(basename "$dir") -f "$dir/environment.yml"
-              echo "Created conda environment"
-              conda activate $(basename "$dir")
-              pip install mypy
+              env_type="conda"
+              environment_cache_key="${{ runner.os }}-conda-${dir}-${{ hashFiles('${dir}/environment.yml') }}"
             elif [ -f "$dir/requirements.txt" ]; then
-              echo "Setting up venv for $dir"
-              python -m venv "$dir/venv"
-              source "$dir/venv/bin/activate"
-              pip install -r "$dir/requirements.txt"
-              pip install mypy
+              env_type="venv"
+              environment_cache_key="${{ runner.os }}-venv-${dir}-${{ hashFiles('${dir}/requirements.txt') }}"
             else
               echo "No environment file found in $dir, skipping directory"
               continue
+            fi
+
+            # Restore the cache if available
+            echo "Restoring environment cache for $dir"
+            cache_restore_result=$(gh api -X GET \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/actions/caches \
+              --field-ref "key=${environment_cache_key}")
+
+            if echo "$cache_restore_result" | grep -q '"total_count": 1'; then
+              echo "Cache found for $dir"
+              cache_id=$(echo "$cache_restore_result" | jq -r '.actions_caches[0].id')
+              gh api -X GET -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/caches/${cache_id}/download | tar -xzf - -C /
+            else
+              echo "No cache found for $dir, setting up environment"
+              if [ "$env_type" = "conda" ]; then
+                echo "Setting up conda environment for $dir"
+                conda env create -n $(basename "$dir") -f "$dir/environment.yml"
+                echo "Created conda environment"
+                conda activate $(basename "$dir")
+                pip install mypy
+              elif [ "$env_type" = "venv" ]; then
+                echo "Setting up venv for $dir"
+                python -m venv "$dir/venv"
+                source "$dir/venv/bin/activate"
+                pip install -r "$dir/requirements.txt"
+                pip install mypy
+              fi
+
+              # Save the environment cache
+              echo "Saving environment cache for $dir"
+              if [ "$env_type" = "conda" ]; then
+                tar -czf ${dir}-conda-env.tar.gz ~/.conda/envs/$(basename "$dir")
+              elif [ "$env_type" = "venv" ]; then
+                tar -czf ${dir}-venv.tar.gz "$dir/venv"
+              fi
+              gh api -X POST \
+                -H "Accept: application/vnd.github+json" \
+                /repos/${{ github.repository }}/actions/caches \
+                --field-ref "key=${environment_cache_key}" \
+                --field-ref "path=${dir}-conda-env.tar.gz"
             fi
 
             echo "Running mypy in $dir"
@@ -86,17 +102,15 @@ jobs:
               mypy --install-types --non-interactive --config-file "$dir/.mypy.ini" "$dir"
             fi
 
-            if [ -f "$dir/environment.yml" ]; then
+            if [ "$env_type" = "conda" ]; then
               conda deactivate
-            elif [ -f "$dir/requirements.txt" ]; then
+            elif [ "$env_type" = "venv" ]; then
               deactivate
             fi
           done
 
-      - name: Upload Conda Cache
-        if: steps.cache-conda.outputs.cache-hit != 'true'
+      - name: Clean up conda
         run: conda clean --all -y
 
-      - name: Upload Pip Cache
-        if: steps.cache-pip.outputs.cache-hit != 'true'
+      - name: Clean up pip cache
         run: pip cache purge
