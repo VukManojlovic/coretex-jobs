@@ -13,7 +13,7 @@ from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 import torch
 
 
-MODEL_ID = "stabilityai/stable-diffusion-2-1"
+MODEL_ID = "stabilityai/stable-diffusion-2-1"  #Comment
 
 
 def loadModel(device: str) -> StableDiffusionPipeline:
