@@ -9,11 +9,11 @@ import ollama
 from coretex import currentTaskRun, folder_manager, CustomDataset, TaskRun
 
 from model import launchOllamaServer, pullModel, LLM
-
+# comment
 
 def readPDF(filePath: Path) -> list[str]:
     pagesText: list[str] = []
-    
+
     with fitz.open(filePath) as doc:
         for page in doc:
             paragraphs = page.get_text().split("\n")
@@ -24,14 +24,14 @@ def readPDF(filePath: Path) -> list[str]:
 
 def loadCorpus(dataset: CustomDataset) -> list[list[str]]:
     corpus: list[list[str]] = []
-    
+
     for sample in dataset.samples:
         sample.unzip()
 
         pdfPaths = list(sample.path.rglob("*.pdf"))
         if len(pdfPaths) == 0:
             raise ValueError(">> [LLM Translate] The provided dataset does not contain any .pdf documents")
-        
+
         for pdfPath in pdfPaths:
             if not "__MACOSX" in str(pdfPath):
                 corpus.append(readPDF(pdfPath))
@@ -45,13 +45,13 @@ def main() -> None:
     dataset.download()
 
     launchOllamaServer()
-    
+
     logging.info(">> [OllamaRAG] Pulling model")
     pullModel(LLM)
-    
+
     logging.info(">> [OllamaRAG] Loading text corpus")
     corpus = loadCorpus(taskRun.dataset)
-    
+
     translatedDataset = CustomDataset.createDataset(f"{taskRun.id}-translated", taskRun.projectId)
 
     language = taskRun.parameters["language"]
@@ -59,7 +59,7 @@ def main() -> None:
     for counter, document in enumerate(corpus, start = 1):
         document = [x.strip() for x in document]
         document = [line for line in document if line != ""]
-        
+
         translatedText = ""
         for paragraph in document:
             logging.info(">> [OllamaRAG] Translating paragraph")
@@ -73,7 +73,7 @@ def main() -> None:
             response = ollama.chat(model = LLM, messages = [msg])
             answer = response["message"]["content"]
             translatedText += answer + "\n"
-        
+
         txtFileName = f"file-{counter}.txt"
         txtFile = folder_manager.temp / txtFileName
         with open(txtFile, "w") as f:
@@ -83,7 +83,7 @@ def main() -> None:
         zipFile = folder_manager.temp / zipFileName
         with zipfile.ZipFile(zipFile, "w") as zf:
             zf.write(txtFile, txtFileName)
-        
+
         translatedDataset.add(zipFile)
 
         taskRun.submitOutput("translatedDataset", translatedDataset)
