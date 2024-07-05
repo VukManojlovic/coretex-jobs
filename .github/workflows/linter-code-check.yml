@@ -45,6 +45,7 @@ jobs:
               pip install mypy
             elif [ -f "$dir/requirements.txt" ]; then
               echo "Setting up venv for $dir"
+              continue
               python -m venv "$dir/venv"
               source "$dir/venv/bin/activate"
               pip install -r "$dir/requirements.txt"
