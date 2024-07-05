@@ -42,10 +42,10 @@ jobs:
             # Determine the type of environment and generate a unique cache key
             if [ -f "$dir/environment.yml" ]; then
               env_type="conda"
-              environment_cache_key="${{ runner.os }}-conda-${dir}-${{ hashFiles('${dir}/environment.yml') }}"
+              cache_key="${{ runner.os }}-conda-${dir}-${{ hashFiles('${dir}/environment.yml') }}"
             elif [ -f "$dir/requirements.txt" ]; then
               env_type="venv"
-              environment_cache_key="${{ runner.os }}-venv-${dir}-${{ hashFiles('${dir}/requirements.txt') }}"
+              cache_key="${{ runner.os }}-venv-${dir}-${{ hashFiles('${dir}/requirements.txt') }}"
             else
               echo "No environment file found in $dir, skipping directory"
               continue
@@ -56,7 +56,7 @@ jobs:
             cache_restore_result=$(gh api -X GET \
               -H "Accept: application/vnd.github+json" \
               /repos/${{ github.repository }}/actions/caches \
-              --field "key=${environment_cache_key}")
+              --field "key=${cache_key}")
 
             if echo "$cache_restore_result" | grep -q '"total_count": 1'; then
               echo "Cache found for $dir"
@@ -70,26 +70,33 @@ jobs:
                 echo "Created conda environment"
                 conda activate $(basename "$dir")
                 pip install mypy
+                conda_env_path="$HOME/.conda/envs/$(basename "$dir")"
               elif [ "$env_type" = "venv" ]; then
                 echo "Setting up venv for $dir"
                 python -m venv "$dir/venv"
                 source "$dir/venv/bin/activate"
                 pip install -r "$dir/requirements.txt"
                 pip install mypy
+                venv_path="$dir/venv"
               fi
 
-              # Save the environment cache
-              echo "Saving environment cache for $dir"
-              if [ "$env_type" = "conda" ]; then
-                tar -czf ${dir}-conda-env.tar.gz ~/.conda/envs/$(basename "$dir")
-              elif [ "$env_type" = "venv" ]; then
-                tar -czf ${dir}-venv.tar.gz "$dir/venv"
-              fi
-              gh api -X POST \
-                -H "Accept: application/vnd.github+json" \
-                /repos/${{ github.repository }}/actions/caches \
-                --field "key=${environment_cache_key}" \
-                --field "path=${dir}-conda-env.tar.gz"
+              # Cache the environment
+            if [ -f "$dir/environment.yml" ]; then
+              # cache_key="${{ runner.os }}-conda-${dir}-${{ hashFiles('${dir}/environment.yml') }}"
+              cache_path=$conda_env_path
+            elif [ -f "$dir/requirements.txt" ]; then
+              # cache_key="${{ runner.os }}-venv-${dir}-${{ hashFiles('${dir}/requirements.txt') }}"
+              cache_path=$venv_path
+            fi
+
+            - name: Cache environment for $dir
+              uses: actions/cache@v3
+              with:
+                path: $cache_path
+                key: $cache_key
+                restore-keys: |
+                  ${{ runner.os }}-conda-${dir}-
+                  ${{ runner.os }}-venv-${dir}-
             fi
 
             echo "Running mypy in $dir"
