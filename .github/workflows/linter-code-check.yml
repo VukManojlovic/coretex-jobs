@@ -46,7 +46,6 @@ jobs:
               pip install mypy
             elif [ -f "$dir/requirements.txt" ]; then
               echo "Setting up venv for $dir"
-              continue
               python -m venv "$dir/venv"
               source "$dir/venv/bin/activate"
               pip install -r "$dir/requirements.txt"
@@ -72,9 +71,3 @@ jobs:
               rm -rf "$dir/venv"
             fi
           done
-
-      - name: Clean up conda
-        run: conda clean --all -y
-
-      - name: Clean up pip cache
-        run: pip cache purge
