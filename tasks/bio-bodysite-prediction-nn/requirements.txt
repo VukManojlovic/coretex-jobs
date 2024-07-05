@@ -3,4 +3,4 @@ matplotlib
 pandas
 xgboost
 coretex
-tensorflow==2.11.1
+tensorflow
