@@ -70,8 +70,8 @@ def main() -> None:
                 "role": "user",
                 "content": query
             }
-            response = ollama.chat(model = LLM, messages = [msg])
-            answer = response["message"]["content"]
+            response = ollama.chat(model = LLM, messages = [msg])  # type: ignore[list-item]
+            answer = response["message"]["content"]  # type: ignore[index]
             translatedText += answer + "\n"
 
         txtFileName = f"file-{counter}.txt"
