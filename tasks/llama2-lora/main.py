@@ -25,7 +25,7 @@ def loadData(dataset: CustomDataset):
         dataFiles = list(sample.path.glob("*.parquet"))
         trainingData = load_dataset("parquet", data_files = [str(filePath)for filePath in dataFiles])["train"]
 
-        return trainingData
+        return trainingData #
 
 
 def runInference(trainer: SFTTrainer, tokenizer: AutoTokenizer, prompt: str) -> str:
