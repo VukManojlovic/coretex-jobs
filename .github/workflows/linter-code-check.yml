@@ -27,8 +27,6 @@ jobs:
         run: |
           pip install mypy
       - name: Analysing templates with mypy
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for dir in tasks/* ; do
             echo "Checking directory: $dir"
@@ -39,64 +37,18 @@ jobs:
               continue
             fi
 
-            # Determine the type of environment and generate a unique cache key
             if [ -f "$dir/environment.yml" ]; then
-              env_type="conda"
-              cache_key="${{ runner.os }}-conda-${dir}-${{ hashFiles('${dir}/environment.yml') }}"
+              echo "Setting up conda environment for $dir"
+              conda env create -n $(basename "$dir") -f "$dir/environment.yml"
+              echo "Created conda environment"
+              conda activate $(basename "$dir")
+              pip install mypy
             elif [ -f "$dir/requirements.txt" ]; then
-              env_type="venv"
-              cache_key="${{ runner.os }}-venv-${dir}-${{ hashFiles('${dir}/requirements.txt') }}"
-            else
-              echo "No environment file found in $dir, skipping directory"
-              continue
-            fi
-
-            # Restore the cache if available
-            echo "Restoring environment cache for $dir"
-            cache_restore_result=$(gh api -X GET \
-              -H "Accept: application/vnd.github+json" \
-              /repos/${{ github.repository }}/actions/caches \
-              --field "key=${cache_key}")
-
-            if echo "$cache_restore_result" | grep -q '"total_count": 1'; then
-              echo "Cache found for $dir"
-              cache_id=$(echo "$cache_restore_result" | jq -r '.actions_caches[0].id')
-              gh api -X GET -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/caches/${cache_id}/download | tar -xzf - -C /
-            else
-              echo "No cache found for $dir, setting up environment"
-              if [ "$env_type" = "conda" ]; then
-                echo "Setting up conda environment for $dir"
-                conda env create -n $(basename "$dir") -f "$dir/environment.yml"
-                echo "Created conda environment"
-                conda activate $(basename "$dir")
-                pip install mypy
-                conda_env_path="$HOME/.conda/envs/$(basename "$dir")"
-              elif [ "$env_type" = "venv" ]; then
-                echo "Setting up venv for $dir"
-                python -m venv "$dir/venv"
-                source "$dir/venv/bin/activate"
-                pip install -r "$dir/requirements.txt"
-                pip install mypy
-                venv_path="$dir/venv"
-              fi
-
-              # Cache the environment
-              if [ -f "$dir/environment.yml" ]; then
-                # cache_key="${{ runner.os }}-conda-${dir}-${{ hashFiles('${dir}/environment.yml') }}"
-                cache_path=$conda_env_path
-              elif [ -f "$dir/requirements.txt" ]; then
-                # cache_key="${{ runner.os }}-venv-${dir}-${{ hashFiles('${dir}/requirements.txt') }}"
-                cache_path=$venv_path
-              fi
-
-              - name: Cache environment for $dir
-                uses: actions/cache@v3
-                with:
-                  path: $cache_path
-                  key: $cache_key
-                  restore-keys: |
-                    ${{ runner.os }}-conda-${dir}-
-                    ${{ runner.os }}-venv-${dir}-
+              echo "Setting up venv for $dir"
+              python -m venv "$dir/venv"
+              source "$dir/venv/bin/activate"
+              pip install -r "$dir/requirements.txt"
+              pip install mypy
             fi
 
             echo "Running mypy in $dir"
@@ -110,10 +62,12 @@ jobs:
               mypy --install-types --non-interactive --config-file "$dir/.mypy.ini" "$dir"
             fi
 
-            if [ "$env_type" = "conda" ]; then
+            if [ -f "$dir/environment.yml" ]; then
               conda deactivate
-            elif [ "$env_type" = "venv" ]; then
+              conda remove -y -n $(basename "$dir") --all
+            elif [ -f "$dir/requirements.txt" ]; then
               deactivate
+              rm -rf "$dir/venv"
             fi
           done
 
