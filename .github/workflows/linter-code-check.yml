@@ -28,6 +28,7 @@ jobs:
           pip install mypy
       - name: Analysing templates with mypy
         run: |
+          eval "$(conda shell.bash hook)"
           for dir in tasks/* ; do
             echo "Checking directory: $dir"
 
