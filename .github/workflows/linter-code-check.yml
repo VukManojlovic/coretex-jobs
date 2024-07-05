@@ -81,22 +81,22 @@ jobs:
               fi
 
               # Cache the environment
-            if [ -f "$dir/environment.yml" ]; then
-              # cache_key="${{ runner.os }}-conda-${dir}-${{ hashFiles('${dir}/environment.yml') }}"
-              cache_path=$conda_env_path
-            elif [ -f "$dir/requirements.txt" ]; then
-              # cache_key="${{ runner.os }}-venv-${dir}-${{ hashFiles('${dir}/requirements.txt') }}"
-              cache_path=$venv_path
-            fi
+              if [ -f "$dir/environment.yml" ]; then
+                # cache_key="${{ runner.os }}-conda-${dir}-${{ hashFiles('${dir}/environment.yml') }}"
+                cache_path=$conda_env_path
+              elif [ -f "$dir/requirements.txt" ]; then
+                # cache_key="${{ runner.os }}-venv-${dir}-${{ hashFiles('${dir}/requirements.txt') }}"
+                cache_path=$venv_path
+              fi
 
-            - name: Cache environment for $dir
-              uses: actions/cache@v3
-              with:
-                path: $cache_path
-                key: $cache_key
-                restore-keys: |
-                  ${{ runner.os }}-conda-${dir}-
-                  ${{ runner.os }}-venv-${dir}-
+              - name: Cache environment for $dir
+                uses: actions/cache@v3
+                with:
+                  path: $cache_path
+                  key: $cache_key
+                  restore-keys: |
+                    ${{ runner.os }}-conda-${dir}-
+                    ${{ runner.os }}-venv-${dir}-
             fi
 
             echo "Running mypy in $dir"
