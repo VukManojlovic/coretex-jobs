@@ -25,7 +25,6 @@ jobs:
           python-version: "3.9"
       - name: Install mypy globally
         run: |
-          pip install pip==23.0.1
           pip install mypy
       - name: Analysing templates with mypy
         run: |
@@ -44,12 +43,14 @@ jobs:
               conda env create -n $(basename "$dir") -f "$dir/environment.yml"
               echo "Created conda environment"
               conda activate $(basename "$dir")
+              pip install pip==23.0.1
               pip install mypy
             elif [ -f "$dir/requirements.txt" ]; then
               echo "Setting up venv for $dir"
               python -m venv "$dir/venv"
               source "$dir/venv/bin/activate"
               pip install -r "$dir/requirements.txt"
+              pip install pip==23.0.1
               pip install mypy
             fi
 
