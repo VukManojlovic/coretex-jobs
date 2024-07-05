@@ -13,7 +13,7 @@ from src.occurence import NamedEntityRecognitionResult
 def main() -> None:
     taskRun: TaskRun[CustomDataset] = currentTaskRun()
 
-    pbmmUrl = taskRun.parameters["modelPbmmUrl"]####
+    pbmmUrl = taskRun.parameters["modelPbmmUrl"]#####
     scorerUrl = taskRun.parameters["modelScorerUrl"]
     pbmmName = "deepspeech-0.8.2-model.pbmm"
     scorerName = "deepspeech-0.8.2-model.scorer"
