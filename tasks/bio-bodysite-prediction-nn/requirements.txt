@@ -2,5 +2,5 @@ scikit-learn
 matplotlib
 pandas
 xgboost
-coretex
+coretex>=1.0.147
 tensorflow
