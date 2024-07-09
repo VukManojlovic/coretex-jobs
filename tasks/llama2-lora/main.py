@@ -11,7 +11,7 @@ from coretex import currentTaskRun, CustomDataset
 from src.model import getModelName, loadModel, loadTokenizer, uploadModel
 from src.configurations import getQuantizationConfig, getPeftParameters, getTrainingParameters
 
-
+# comment # comment #comment #comment #comment #comment #comment #comment #comment #comment #comment #comment #comment #comment #commet
 def loadData(dataset: CustomDataset):
     dataset.download()
     for sample in dataset.samples:
@@ -19,19 +19,19 @@ def loadData(dataset: CustomDataset):
 
         ######                                        ######
         # Load data and perform preprocessing as necessary #
-        ######                                        ######
+        ######                                        ######  ##Comment
 
         # Example for loading parquet files from a single sample
         dataFiles = list(sample.path.glob("*.parquet"))
         trainingData = load_dataset("parquet", data_files = [str(filePath)for filePath in dataFiles])["train"]
 
-        return trainingData
+        return trainingData #
 
 
 def runInference(trainer: SFTTrainer, tokenizer: AutoTokenizer, prompt: str) -> str:
     textGenerator = pipeline(task = "text-generation", model = trainer.model, tokenizer = tokenizer, max_length = 200)
     output = textGenerator(f"<s>[INST] {prompt} [/INST]")
-    return output[0]['generated_text']
+    return str(output[0]['generated_text'])
 
 
 def main() -> None:
